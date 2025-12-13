@@ -2,10 +2,10 @@ import { Queue } from "bullmq";
 import { env } from "./config";
 
 export const queueNames = {
-  dataset: "ftm:datasets",
-  eval: "ftm:evals",
-  fineTuning: "ftm:fine-tuning",
-  promotion: "ftm:promotions"
+  dataset: "ftm-datasets",
+  eval: "ftm-evals",
+  fineTuning: "ftm-fine-tuning",
+  promotion: "ftm-promotions"
 } as const;
 
 export const connection = { connection: { url: env.FTM_QUEUE_URL } };

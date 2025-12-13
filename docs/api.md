@@ -10,7 +10,7 @@ All endpoints are REST. Authentication uses Orchestrator-issued API keys (servic
 ## Core resources (v1)
 ### Datasets
 - `POST /datasets` — build dataset from traces
-  - Body: `{ project_id, assistant_id?, source: { type: "orchestrator_traces", filters: {...} }, output_format, dedup: { exact: true, semantic: true? }, vectorize?: true }`
+  - Body: `{ tenant_id, project_id, assistant_id?, source: { type: "orchestrator_traces", filters: {...} }, output_format, dedup: { exact: true, semantic: true? }, vectorize?: true }`
   - Gates: GovernanceCheck(TRiSM sanitize) before job enqueue.
 - `GET /datasets/{id}` — status, metadata, storage_uri, sanitized flags.
 - `POST /datasets/{id}/rebuild` — rebuild with same config and new lineage entry.

@@ -498,12 +498,17 @@ components:
   schemas:
     DatasetCreateRequest:
       type: object
-      required: [project_id, source, output_format]
+      required: [tenant_id, project_id, source, output_format]
       properties:
+        tenant_id:
+          type: string
+          format: uuid
         project_id:
           type: string
+          format: uuid
         assistant_id:
           type: string
+          format: uuid
         source:
           type: object
           required: [type]
@@ -534,8 +539,12 @@ components:
         dataset_id:
           type: string
           format: uuid
+        tenant_id:
+          type: string
+          format: uuid
         project_id:
           type: string
+          format: uuid
         assistant_id:
           type: string
         status:

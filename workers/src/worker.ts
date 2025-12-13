@@ -19,10 +19,10 @@ const s3 = new S3Client({
 });
 
 function parseStorageUri(uri: string) {
-  const match = uri.match(/^s3:\\/\\/([^/]+)(?:\\/(.*))?$/);
+  const match = uri.match(/^s3:\/\/([^/]+)(?:\/(.*))?$/);
   if (!match) throw new Error("Invalid FTM_STORAGE_URI, expected s3://bucket[/prefix]");
   const bucket = match[1];
-  const prefix = match[2] ? match[2].replace(/\\/$/, "") : "";
+  const prefix = match[2] ? match[2].replace(/\/$/, "") : "";
   return { bucket, prefix };
 }
 

@@ -5,6 +5,9 @@ import yaml from "js-yaml";
 
 function loadSpec() {
   const yamlPath = path.join(__dirname, "../../docs/openapi.yaml");
+  if (!fs.existsSync(yamlPath)) {
+    throw new Error(`OpenAPI file not found at ${yamlPath}`);
+  }
   const content = fs.readFileSync(yamlPath, "utf-8");
   return yaml.load(content);
 }

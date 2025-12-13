@@ -1,4 +1,4 @@
-import { Queue, QueueScheduler, Worker } from "bullmq";
+import { Queue } from "bullmq";
 import { env } from "./config";
 
 export const queueNames = {
@@ -14,7 +14,3 @@ export const datasetQueue = new Queue(queueNames.dataset, connection);
 export const evalQueue = new Queue(queueNames.eval, connection);
 export const ftJobQueue = new Queue(queueNames.fineTuning, connection);
 export const promotionQueue = new Queue(queueNames.promotion, connection);
-
-// Schedulers ensure delayed/retried jobs are processed even after restarts.
-export const datasetScheduler = new QueueScheduler(queueNames.dataset, connection);
-export const ftScheduler = new QueueScheduler(queueNames.fineTuning, connection);

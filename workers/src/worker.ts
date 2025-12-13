@@ -2,7 +2,7 @@ import { Worker } from "bullmq";
 import { env } from "./config";
 import { pool } from "./db";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { connection, datasetScheduler, evalQueue, ftJobQueue, promotionQueue, ftScheduler, queueNames } from "./queues";
+import { connection, queueNames } from "./queues";
 
 type DatasetJob = {
   dataset_id: string;
@@ -221,8 +221,6 @@ const shutdown = async () => {
   await evalWorker.close();
   await ftWorker.close();
   await promotionWorker.close();
-  await datasetScheduler.close();
-  await ftScheduler.close();
   await pool.end();
   process.exit(0);
 };

@@ -1,6 +1,7 @@
 import { Worker } from "bullmq";
 import { env } from "./config";
 import { pool } from "./db";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 type DatasetJob = {
   dataset_id: string;
@@ -11,6 +12,20 @@ type DatasetJob = {
 };
 
 const connection = { connection: { url: env.FTM_QUEUE_URL } };
+
+const s3 = new S3Client({
+  region: env.FTM_STORAGE_REGION,
+  endpoint: env.AWS_ENDPOINT,
+  forcePathStyle: env.AWS_S3_FORCE_PATH_STYLE ?? true
+});
+
+function parseStorageUri(uri: string) {
+  const match = uri.match(/^s3:\\/\\/([^/]+)(?:\\/(.*))?$/);
+  if (!match) throw new Error("Invalid FTM_STORAGE_URI, expected s3://bucket[/prefix]");
+  const bucket = match[1];
+  const prefix = match[2] ? match[2].replace(/\\/$/, "") : "";
+  return { bucket, prefix };
+}
 
 const datasetWorker = new Worker(
   "ftm:datasets",
@@ -28,8 +43,27 @@ const datasetWorker = new Worker(
         throw new Error(`Dataset ${data.dataset_id} not found`);
       }
 
-      const storagePrefix = env.FTM_STORAGE_URI.replace(/\/$/, "");
-      const storageUri = `${storagePrefix}/datasets/${data.tenant_id}/${data.project_id}/${data.dataset_id}/dataset.jsonl`;
+      const { bucket, prefix } = parseStorageUri(env.FTM_STORAGE_URI);
+      const key = `${prefix ? prefix + "/" : ""}datasets/${data.tenant_id}/${data.project_id}/${data.dataset_id}/dataset.jsonl`;
+
+      const placeholder = [
+        JSON.stringify({
+          info: "placeholder dataset row",
+          dataset_id: data.dataset_id,
+          generated_at: new Date().toISOString()
+        })
+      ].join("\n");
+
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: bucket,
+          Key: key,
+          Body: placeholder,
+          ContentType: "application/jsonl"
+        })
+      );
+
+      const storageUri = `s3://${bucket}/${key}`;
 
       const updated = await client.query(
         `update ftm_datasets
@@ -44,8 +78,12 @@ const datasetWorker = new Worker(
         [data.dataset_id, storageUri, data.vectorize]
       );
 
-      job.log(`Dataset ${data.dataset_id} marked ready`);
+      job.log(`Dataset ${data.dataset_id} marked ready at ${storageUri}`);
       return updated.rows[0];
+    } catch (err) {
+      await pool.query(`update ftm_datasets set status = 'failed', updated_at = now() where dataset_id = $1`, [data.dataset_id]);
+      job.log(`Dataset ${data.dataset_id} failed: ${(err as Error).message}`);
+      throw err;
     } finally {
       client.release();
     }

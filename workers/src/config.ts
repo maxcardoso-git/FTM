@@ -9,6 +9,12 @@ const envSchema = z.object({
   FTM_QUEUE_URL: z.string().default("redis://localhost:6379"),
   FTM_QUEUE_TYPE: z.string().default("redis"),
   FTM_STORAGE_URI: z.string().default("s3://ftm-dev"),
+  FTM_STORAGE_REGION: z.string().default("us-east-1"),
+  AWS_ENDPOINT: z.string().optional(),
+  AWS_S3_FORCE_PATH_STYLE: z
+    .enum(["true", "false"])
+    .transform((v) => v === "true")
+    .optional(),
   FTM_LOG_LEVEL: z.string().default("info")
 });
 

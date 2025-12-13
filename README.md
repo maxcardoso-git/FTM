@@ -31,3 +31,14 @@ External API-first service for model optimization (datasets, evals, fine-tuning,
 ## Repository layout (initial)
 - `docs/` — architecture, data model, API, roadmap (added incrementally).
 - Service code will be added in subsequent steps (API + workers + adapters).
+- `api/` — Fastify-based API server (TypeScript) — run with `npm run dev:api`.
+- `workers/` — BullMQ workers for async jobs — run with `npm run dev:worker`.
+- `migrations/` — SQL migrations (apply `0001_init.sql` to bootstrap schema).
+- `docker-compose.yml` — local dependencies (Postgres/Redis/MinIO) with configurable host ports via environment.
+
+## Getting started (local)
+1) `npm install`
+2) `docker compose up -d` (override ports via `.env` or env vars as needed)
+3) Apply migrations: `psql $FTM_DATABASE_URL -f migrations/0001_init.sql`
+4) Run API: `npm run dev:api`
+5) Run worker: `npm run dev:worker`

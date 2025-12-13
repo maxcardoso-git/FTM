@@ -4,6 +4,7 @@ import { registerDatasetRoutes } from "./routes/datasets";
 import { registerEvalRoutes } from "./routes/evals";
 import { registerFtJobRoutes } from "./routes/ftJobs";
 import { registerPromotionRoutes } from "./routes/promotions";
+import { registerEvalSuiteRoutes } from "./routes/evalSuites";
 
 async function buildServer() {
   const app = fastify({
@@ -15,6 +16,7 @@ async function buildServer() {
   app.get("/health", async () => ({ status: "ok" }));
 
   await app.register(registerDatasetRoutes, { prefix: "/datasets" });
+  await app.register(registerEvalSuiteRoutes, { prefix: "/eval-suites" });
   await app.register(registerEvalRoutes, { prefix: "/eval-runs" });
   await app.register(registerFtJobRoutes, { prefix: "/ft-jobs" });
   await app.register(registerPromotionRoutes, { prefix: "/promotions" });

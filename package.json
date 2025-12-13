@@ -6,7 +6,8 @@
   "scripts": {
     "dev:api": "tsx api/src/server.ts",
     "dev:worker": "tsx workers/src/worker.ts",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "build": "tsc"
   },
   "engines": {
     "node": ">=20"

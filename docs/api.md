@@ -19,7 +19,7 @@ All endpoints are REST. Authentication uses Orchestrator-issued API keys (servic
 - `POST /eval-suites` — create suite `{ name, selection_strategy: "static"|"vector_retrieval", kb_collection?, policy_profile?, description?, cases? }`
 - `GET /eval-suites/{id}`
 - `POST /eval-runs` — trigger eval
-  - Body: `{ eval_suite_id, model_ref: { type: "base_model"|"ft_model_version"|"provider_model_id", value }, overrides?, cost_cap_usd? }`
+  - Body: `{ tenant_id, project_id, eval_suite_id, model_ref: { type: "base_model"|"ft_model_version"|"provider_model_id", value }, overrides?, cost_cap_usd? }`
   - Flow: governance gate (if policy profile) → enqueue eval job → metrics persisted → audit emit.
 - `GET /eval-runs/{id}` — status, metrics, artifacts links.
 

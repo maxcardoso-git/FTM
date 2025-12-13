@@ -1,6 +1,7 @@
 import fastify from "fastify";
 import { env } from "./config";
 import { registerDatasetRoutes } from "./routes/datasets";
+import { registerEvalRoutes } from "./routes/evals";
 
 async function buildServer() {
   const app = fastify({
@@ -12,6 +13,7 @@ async function buildServer() {
   app.get("/health", async () => ({ status: "ok" }));
 
   await app.register(registerDatasetRoutes, { prefix: "/datasets" });
+  await app.register(registerEvalRoutes, { prefix: "/eval-runs" });
 
   return app;
 }

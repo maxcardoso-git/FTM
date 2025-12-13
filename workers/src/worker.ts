@@ -2,7 +2,7 @@ import { Worker } from "bullmq";
 import { env } from "./config";
 import { pool } from "./db";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { connection, datasetScheduler, ftScheduler, queueNames } from "./queues";
+import { connection, datasetScheduler, evalQueue, ftJobQueue, promotionQueue, ftScheduler, queueNames } from "./queues";
 
 type DatasetJob = {
   dataset_id: string;
@@ -102,8 +102,37 @@ datasetWorker.on("failed", (job, err) => {
 const evalWorker = new Worker(
   queueNames.eval,
   async (job) => {
-    job.log(`Eval job ${job.id} placeholder`);
-    return { status: "not_implemented" };
+    const data = job.data as {
+      eval_run_id: string;
+      tenant_id: string;
+      project_id: string;
+      eval_suite_id: string;
+      model_ref_type: string;
+      model_ref_value: string;
+    };
+    const client = await pool.connect();
+    try {
+      await client.query(
+        `update ftm_eval_runs
+         set status = 'completed',
+             metrics_json = '{"placeholder": true}'::jsonb,
+             trism_report = '{"placeholder": true}'::jsonb,
+             started_at = coalesce(started_at, now()),
+             completed_at = now(),
+             created_at = coalesce(created_at, now())
+         where eval_run_id = $1`,
+        [data.eval_run_id]
+      );
+      job.log(`Eval job ${job.id} marked completed`);
+      return { status: "completed" };
+    } catch (err) {
+      await client.query(`update ftm_eval_runs set status = 'failed', completed_at = now() where eval_run_id = $1`, [
+        data.eval_run_id
+      ]);
+      throw err;
+    } finally {
+      client.release();
+    }
   },
   connection
 );

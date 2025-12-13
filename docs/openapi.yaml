@@ -684,13 +684,16 @@ components:
 
     FtJobCreateRequest:
       type: object
-      required: [project_id, method, provider, base_model, dataset_id]
+      required: [tenant_id, project_id, method, provider, base_model, dataset_id]
       properties:
+        tenant_id:
+          type: string
+          format: uuid
         project_id:
           type: string
+          format: uuid
         method:
           type: string
-          enum: [SFT, DPO, RFT]
           enum: [SFT, DPO, RFT]
         provider:
           type: string
@@ -698,11 +701,6 @@ components:
         base_model:
           type: string
         dataset_id:
-          type: string
-        tenant_id:
-          type: string
-          format: uuid
-        project_id:
           type: string
           format: uuid
         hyperparams:

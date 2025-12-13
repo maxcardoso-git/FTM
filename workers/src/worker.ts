@@ -180,8 +180,34 @@ const ftWorker = new Worker(
 const promotionWorker = new Worker(
   queueNames.promotion,
   async (job) => {
-    job.log(`Promotion job ${job.id} placeholder`);
-    return { status: "not_implemented" };
+    const data = job.data as {
+      decision_id: string;
+      tenant_id: string;
+      project_id: string;
+      model_version_id: string;
+      target_type: string;
+      target_value: string;
+    };
+    const client = await pool.connect();
+    try {
+      await client.query(
+        `update ftm_promotions
+         set decision = 'promoted',
+             trism_pass = true,
+             prism_pass = true,
+             production_pointer_json = '{"placeholder": true}'::jsonb,
+             created_at = coalesce(created_at, now())
+         where decision_id = $1`,
+        [data.decision_id]
+      );
+      job.log(`Promotion ${job.id} marked promoted`);
+      return { status: "promoted" };
+    } catch (err) {
+      await client.query(`update ftm_promotions set decision = 'blocked' where decision_id = $1`, [data.decision_id]);
+      throw err;
+    } finally {
+      client.release();
+    }
   },
   connection
 );

@@ -1,4 +1,5 @@
-version: "3.9"
+# Local/dev stack for FTM
+# Host ports are configurable via env to avoid conflicts.
 
 services:
   postgres:
@@ -9,7 +10,7 @@ services:
       POSTGRES_PASSWORD: ftm
       POSTGRES_DB: ftm
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
@@ -18,7 +19,7 @@ services:
     restart: unless-stopped
     command: ["redis-server", "--save", "900", "1"]
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
 
   minio:
     image: quay.io/minio/minio:RELEASE.2024-09-22T00-33-43Z
@@ -28,8 +29,8 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - minio-data:/data
 

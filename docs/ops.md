@@ -4,9 +4,12 @@
 - `FTM_ENV`: dev|stage|prod
 - `FTM_PORT`: API port
 - `FTM_DATABASE_URL`: Postgres connection string
+- `POSTGRES_PORT`: host bind port for compose (default 5432)
 - `FTM_STORAGE_URI`: object storage base URI (e.g., s3://bucket)
 - `FTM_STORAGE_REGION`: storage region
+- `MINIO_PORT` / `MINIO_CONSOLE_PORT`: host bind ports for MinIO (default 9000/9001)
 - `FTM_QUEUE_URL` / `FTM_QUEUE_TYPE`: queue endpoint and type (redis|sqs|rabbit)
+- `REDIS_PORT`: host bind port for compose (default 6379)
 - `FTM_VECTOR_URL` (optional): vector store endpoint
 - `FTM_ORCHESTRATOR_URL`: base URL for governance/audit APIs
 - `FTM_ORCHESTRATOR_API_KEY`: service-to-service auth

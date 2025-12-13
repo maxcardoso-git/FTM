@@ -2,6 +2,7 @@ import { Worker } from "bullmq";
 import { env } from "./config";
 import { pool } from "./db";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { connection, datasetScheduler, ftScheduler, queueNames } from "./queues";
 
 type DatasetJob = {
   dataset_id: string;
@@ -10,8 +11,6 @@ type DatasetJob = {
   vectorize: boolean;
   output_format: "jsonl_chat" | "jsonl_prompt_completion";
 };
-
-const connection = { connection: { url: env.FTM_QUEUE_URL } };
 
 const s3 = new S3Client({
   region: env.FTM_STORAGE_REGION,
@@ -28,7 +27,7 @@ function parseStorageUri(uri: string) {
 }
 
 const datasetWorker = new Worker(
-  "ftm:datasets",
+  queueNames.dataset,
   async (job) => {
     const data = job.data as DatasetJob;
     const client = await pool.connect();
@@ -92,15 +91,52 @@ const datasetWorker = new Worker(
 );
 
 datasetWorker.on("ready", () => {
-  console.log(`Dataset worker ready (queue: ftm:datasets, env: ${env.FTM_ENV})`);
+  console.log(`Dataset worker ready (queue: ${queueNames.dataset}, env: ${env.FTM_ENV})`);
 });
 
 datasetWorker.on("failed", (job, err) => {
   console.error(`Dataset job ${job?.id} failed`, err);
 });
 
+// Placeholder workers for eval, fine-tuning, promotions
+const evalWorker = new Worker(
+  queueNames.eval,
+  async (job) => {
+    job.log(`Eval job ${job.id} placeholder`);
+    return { status: "not_implemented" };
+  },
+  connection
+);
+
+const ftWorker = new Worker(
+  queueNames.fineTuning,
+  async (job) => {
+    job.log(`FT job ${job.id} placeholder`);
+    return { status: "not_implemented" };
+  },
+  connection
+);
+
+const promotionWorker = new Worker(
+  queueNames.promotion,
+  async (job) => {
+    job.log(`Promotion job ${job.id} placeholder`);
+    return { status: "not_implemented" };
+  },
+  connection
+);
+
+evalWorker.on("failed", (job, err) => console.error(`Eval job ${job?.id} failed`, err));
+ftWorker.on("failed", (job, err) => console.error(`FT job ${job?.id} failed`, err));
+promotionWorker.on("failed", (job, err) => console.error(`Promotion job ${job?.id} failed`, err));
+
 const shutdown = async () => {
   await datasetWorker.close();
+  await evalWorker.close();
+  await ftWorker.close();
+  await promotionWorker.close();
+  await datasetScheduler.close();
+  await ftScheduler.close();
   await pool.end();
   process.exit(0);
 };

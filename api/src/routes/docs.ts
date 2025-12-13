@@ -4,10 +4,14 @@ import path from "path";
 import yaml from "js-yaml";
 
 function loadSpec() {
-  // Resolve from project root (process.cwd), which is /root/FTM when running npm scripts.
-  const yamlPath = path.resolve(process.cwd(), "docs/openapi.yaml");
-  if (!fs.existsSync(yamlPath)) {
-    throw new Error(`OpenAPI file not found at ${yamlPath}`);
+  const candidates = [
+    path.resolve(process.cwd(), "docs/openapi.yaml"),
+    path.resolve(__dirname, "../../../../docs/openapi.yaml"),
+    path.resolve(__dirname, "../../../docs/openapi.yaml")
+  ];
+  const yamlPath = candidates.find((p) => fs.existsSync(p));
+  if (!yamlPath) {
+    throw new Error(`OpenAPI file not found. Tried: ${candidates.join(", ")}`);
   }
   const content = fs.readFileSync(yamlPath, "utf-8");
   return yaml.load(content);

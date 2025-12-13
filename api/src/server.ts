@@ -5,6 +5,7 @@ import { registerEvalRoutes } from "./routes/evals";
 import { registerFtJobRoutes } from "./routes/ftJobs";
 import { registerPromotionRoutes } from "./routes/promotions";
 import { registerEvalSuiteRoutes } from "./routes/evalSuites";
+import { registerModelVersionRoutes } from "./routes/modelVersions";
 
 async function buildServer() {
   const app = fastify({
@@ -20,6 +21,7 @@ async function buildServer() {
   await app.register(registerEvalRoutes, { prefix: "/eval-runs" });
   await app.register(registerFtJobRoutes, { prefix: "/ft-jobs" });
   await app.register(registerPromotionRoutes, { prefix: "/promotions" });
+  await app.register(registerModelVersionRoutes, { prefix: "/model-versions" });
 
   return app;
 }

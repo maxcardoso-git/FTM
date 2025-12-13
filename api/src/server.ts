@@ -2,6 +2,7 @@ import fastify from "fastify";
 import { env } from "./config";
 import { registerDatasetRoutes } from "./routes/datasets";
 import { registerEvalRoutes } from "./routes/evals";
+import { registerFtJobRoutes } from "./routes/ftJobs";
 
 async function buildServer() {
   const app = fastify({
@@ -14,6 +15,7 @@ async function buildServer() {
 
   await app.register(registerDatasetRoutes, { prefix: "/datasets" });
   await app.register(registerEvalRoutes, { prefix: "/eval-runs" });
+  await app.register(registerFtJobRoutes, { prefix: "/ft-jobs" });
 
   return app;
 }

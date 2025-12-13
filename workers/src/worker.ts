@@ -140,8 +140,39 @@ const evalWorker = new Worker(
 const ftWorker = new Worker(
   queueNames.fineTuning,
   async (job) => {
-    job.log(`FT job ${job.id} placeholder`);
-    return { status: "not_implemented" };
+    const data = job.data as {
+      ft_job_id: string;
+      tenant_id: string;
+      project_id: string;
+      provider: string;
+      method: string;
+      base_model: string;
+      dataset_id: string;
+    };
+    const client = await pool.connect();
+    try {
+      await client.query(
+        `update ftm_ft_jobs
+         set status = 'completed',
+             provider_job_id = provider_job_id,
+             result_json = '{"placeholder": true}'::jsonb,
+             cost_estimate_usd = coalesce(cost_estimate_usd, 0),
+             cost_actual_usd = coalesce(cost_actual_usd, 0),
+             prism_tracked = false,
+             updated_at = now()
+         where ft_job_id = $1`,
+        [data.ft_job_id]
+      );
+      job.log(`FT job ${job.id} marked completed`);
+      return { status: "completed" };
+    } catch (err) {
+      await client.query(`update ftm_ft_jobs set status = 'failed', updated_at = now() where ft_job_id = $1`, [
+        data.ft_job_id
+      ]);
+      throw err;
+    } finally {
+      client.release();
+    }
   },
   connection
 );

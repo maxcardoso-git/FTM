@@ -25,7 +25,7 @@ All endpoints are REST. Authentication uses Orchestrator-issued API keys (servic
 
 ### Fine-tuning jobs
 - `POST /ft-jobs`
-  - Body: `{ project_id, method: "SFT"|"DPO"|"RFT", provider: "openai", base_model, dataset_id, hyperparams?, cost_threshold_usd?, prism_pre_approval?: true }`
+  - Body: `{ tenant_id, project_id, method: "SFT"|"DPO"|"RFT", provider: "openai", base_model, dataset_id, hyperparams?, cost_threshold_usd?, prism_pre_approval?: true }`
   - Gates: dataset.sanitized=true; GovernanceCheck(action=ft.job.create); optional PRISM pre-approval vs estimate.
 - `GET /ft-jobs/{id}`
 - `POST /ft-jobs/{id}/cancel`

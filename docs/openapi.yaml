@@ -699,6 +699,12 @@ components:
           type: string
         dataset_id:
           type: string
+        tenant_id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
         hyperparams:
           type: object
           additionalProperties: true

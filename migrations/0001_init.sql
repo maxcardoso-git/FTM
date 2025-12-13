@@ -3,6 +3,16 @@
 
 create extension if not exists "pgcrypto";
 
+-- Placeholder base tables (override with Orchestrator-owned tables if already present)
+create table if not exists tenants (
+  tenant_id uuid primary key
+);
+
+create table if not exists projects (
+  project_id uuid primary key,
+  tenant_id uuid references tenants(tenant_id)
+);
+
 create table if not exists ftm_datasets (
   dataset_id uuid primary key,
   tenant_id uuid not null references tenants(tenant_id),

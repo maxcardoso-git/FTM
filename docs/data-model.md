@@ -2,8 +2,19 @@
 
 Primary store is PostgreSQL. Artifacts (datasets, eval outputs, FT logs) live in Object Storage. Optional vector layer supports deduplication and eval selection.
 
+Note: `tenants` and `projects` tables are expected from Orchestrator. For standalone/dev, the migration seeds minimal placeholder tables if they do not exist.
+
 ## Relational schema (v1)
 ```sql
+create table if not exists tenants (
+  tenant_id uuid primary key
+);
+
+create table if not exists projects (
+  project_id uuid primary key,
+  tenant_id uuid references tenants(tenant_id)
+);
+
 create table ftm_datasets (
   dataset_id uuid primary key,
   tenant_id uuid not null references tenants(tenant_id),

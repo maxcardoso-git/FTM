@@ -1,0 +1,17 @@
+# Node/TypeScript
+node_modules/
+dist/
+.turbo/
+
+# Python
+__pycache__/
+.pytest_cache/
+.venv/
+
+# Env and local tooling
+.env
+.env.local
+*.log
+
+# OS
+.DS_Store

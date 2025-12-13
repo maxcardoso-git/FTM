@@ -1,0 +1,928 @@
+openapi: 3.0.3
+info:
+  title: Fine-Tuning Manager API
+  version: 0.1.0
+  description: REST API for datasets, evals, fine-tuning, registry, and promotions governed by Orchestrator.
+servers:
+  - url: https://api.ftm.example.com
+security:
+  - orchestratorApiKey: []
+tags:
+  - name: datasets
+  - name: eval-suites
+  - name: eval-runs
+  - name: ft-jobs
+  - name: model-versions
+  - name: promotions
+  - name: production-pointers
+  - name: monitoring
+  - name: webhooks
+paths:
+  /datasets:
+    post:
+      tags: [datasets]
+      summary: Build dataset from Orchestrator traces
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetCreateRequest'
+      responses:
+        '201':
+          description: Dataset created (job enqueued)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dataset'
+        default:
+          $ref: '#/components/responses/Error'
+  /datasets/{dataset_id}:
+    get:
+      tags: [datasets]
+      summary: Get dataset status and metadata
+      parameters:
+        - $ref: '#/components/parameters/DatasetId'
+      responses:
+        '200':
+          description: Dataset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dataset'
+        default:
+          $ref: '#/components/responses/Error'
+  /datasets/{dataset_id}/rebuild:
+    post:
+      tags: [datasets]
+      summary: Rebuild dataset with same configuration
+      parameters:
+        - $ref: '#/components/parameters/DatasetId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '202':
+          description: Rebuild enqueued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dataset'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /eval-suites:
+    post:
+      tags: [eval-suites]
+      summary: Create eval suite
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvalSuiteCreateRequest'
+      responses:
+        '201':
+          description: Eval suite created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvalSuite'
+        default:
+          $ref: '#/components/responses/Error'
+  /eval-suites/{eval_suite_id}:
+    get:
+      tags: [eval-suites]
+      summary: Get eval suite
+      parameters:
+        - $ref: '#/components/parameters/EvalSuiteId'
+      responses:
+        '200':
+          description: Eval suite
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvalSuite'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /eval-runs:
+    post:
+      tags: [eval-runs]
+      summary: Trigger eval run
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvalRunCreateRequest'
+      responses:
+        '201':
+          description: Eval run created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvalRun'
+        default:
+          $ref: '#/components/responses/Error'
+  /eval-runs/{eval_run_id}:
+    get:
+      tags: [eval-runs]
+      summary: Get eval run status and metrics
+      parameters:
+        - $ref: '#/components/parameters/EvalRunId'
+      responses:
+        '200':
+          description: Eval run
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvalRun'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /ft-jobs:
+    post:
+      tags: [ft-jobs]
+      summary: Create fine-tuning job
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FtJobCreateRequest'
+      responses:
+        '201':
+          description: FT job created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FtJob'
+        default:
+          $ref: '#/components/responses/Error'
+  /ft-jobs/{ft_job_id}:
+    get:
+      tags: [ft-jobs]
+      summary: Get fine-tuning job
+      parameters:
+        - $ref: '#/components/parameters/FtJobId'
+      responses:
+        '200':
+          description: FT job
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FtJob'
+        default:
+          $ref: '#/components/responses/Error'
+  /ft-jobs/{ft_job_id}/cancel:
+    post:
+      tags: [ft-jobs]
+      summary: Cancel fine-tuning job
+      parameters:
+        - $ref: '#/components/parameters/FtJobId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '202':
+          description: Cancel requested
+        default:
+          $ref: '#/components/responses/Error'
+
+  /model-versions:
+    get:
+      tags: [model-versions]
+      summary: List model versions
+      parameters:
+        - in: query
+          name: project_id
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of model versions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ModelVersion'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [model-versions]
+      summary: Register model version
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModelVersionCreateRequest'
+      responses:
+        '201':
+          description: Model version created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelVersion'
+        default:
+          $ref: '#/components/responses/Error'
+  /model-versions/{model_version_id}:
+    get:
+      tags: [model-versions]
+      summary: Get model version
+      parameters:
+        - $ref: '#/components/parameters/ModelVersionId'
+      responses:
+        '200':
+          description: Model version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelVersion'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /promotions:
+    post:
+      tags: [promotions]
+      summary: Request promotion
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromotionCreateRequest'
+      responses:
+        '201':
+          description: Promotion decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Promotion'
+        default:
+          $ref: '#/components/responses/Error'
+  /promotions/{decision_id}:
+    get:
+      tags: [promotions]
+      summary: Get promotion decision
+      parameters:
+        - $ref: '#/components/parameters/DecisionId'
+      responses:
+        '200':
+          description: Promotion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Promotion'
+        default:
+          $ref: '#/components/responses/Error'
+  /promotions/{decision_id}/rollback:
+    post:
+      tags: [promotions]
+      summary: Roll back promotion pointer
+      parameters:
+        - $ref: '#/components/parameters/DecisionId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '202':
+          description: Rollback initiated
+        default:
+          $ref: '#/components/responses/Error'
+
+  /production-pointers:
+    get:
+      tags: [production-pointers]
+      summary: Get production pointer by target
+      parameters:
+        - in: query
+          name: target_type
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: target_value
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Production pointer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductionPointer'
+        default:
+          $ref: '#/components/responses/Error'
+  /production-pointers/{pointer_id}:
+    patch:
+      tags: [production-pointers]
+      summary: Override production pointer (admin/emergency)
+      parameters:
+        - $ref: '#/components/parameters/PointerId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                active_model_version_id:
+                  type: string
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Updated pointer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductionPointer'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /monitoring/re-evals:
+    post:
+      tags: [monitoring]
+      summary: Schedule re-eval
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReevalCreateRequest'
+      responses:
+        '201':
+          description: Re-eval scheduled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reeval'
+        default:
+          $ref: '#/components/responses/Error'
+  /monitoring/re-evals/{reeval_id}:
+    get:
+      tags: [monitoring]
+      summary: Get re-eval job status
+      parameters:
+        - $ref: '#/components/parameters/ReevalId'
+      responses:
+        '200':
+          description: Re-eval status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reeval'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /webhooks/deliveries/{delivery_id}:
+    get:
+      tags: [webhooks]
+      summary: Get webhook delivery status
+      parameters:
+        - $ref: '#/components/parameters/DeliveryId'
+      responses:
+        '200':
+          description: Delivery status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDelivery'
+        default:
+          $ref: '#/components/responses/Error'
+
+components:
+  securitySchemes:
+    orchestratorApiKey:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Use 'Bearer <orchestrator_api_key>'
+  parameters:
+    IdempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: true
+      schema:
+        type: string
+        format: uuid
+    DatasetId:
+      in: path
+      name: dataset_id
+      required: true
+      schema:
+        type: string
+        format: uuid
+    EvalSuiteId:
+      in: path
+      name: eval_suite_id
+      required: true
+      schema:
+        type: string
+        format: uuid
+    EvalRunId:
+      in: path
+      name: eval_run_id
+      required: true
+      schema:
+        type: string
+        format: uuid
+    FtJobId:
+      in: path
+      name: ft_job_id
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ModelVersionId:
+      in: path
+      name: model_version_id
+      required: true
+      schema:
+        type: string
+        format: uuid
+    DecisionId:
+      in: path
+      name: decision_id
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PointerId:
+      in: path
+      name: pointer_id
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ReevalId:
+      in: path
+      name: reeval_id
+      required: true
+      schema:
+        type: string
+        format: uuid
+    DeliveryId:
+      in: path
+      name: delivery_id
+      required: true
+      schema:
+        type: string
+  responses:
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    DatasetCreateRequest:
+      type: object
+      required: [project_id, source, output_format]
+      properties:
+        project_id:
+          type: string
+        assistant_id:
+          type: string
+        source:
+          type: object
+          required: [type]
+          properties:
+            type:
+              type: string
+              enum: [orchestrator_traces]
+            filters:
+              type: object
+        output_format:
+          type: string
+          enum: [jsonl_chat, jsonl_prompt_completion]
+        dedup:
+          type: object
+          properties:
+            exact:
+              type: boolean
+              default: true
+            semantic:
+              type: boolean
+              default: false
+        vectorize:
+          type: boolean
+          default: false
+    Dataset:
+      type: object
+      properties:
+        dataset_id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+        assistant_id:
+          type: string
+        status:
+          type: string
+          enum: [building, pending_sanitization, ready, blocked, failed]
+        output_format:
+          type: string
+          enum: [jsonl_chat, jsonl_prompt_completion]
+        sanitized:
+          type: boolean
+        sanitized_by_trism:
+          type: boolean
+        trism_report:
+          type: object
+          additionalProperties: true
+        storage_uri:
+          type: string
+        record_count:
+          type: integer
+        token_estimate:
+          type: integer
+        vectorized:
+          type: boolean
+        orchestrator_audit_id:
+          type: string
+        governance_decision_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    EvalSuiteCreateRequest:
+      type: object
+      required: [project_id, name, selection_strategy]
+      properties:
+        project_id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        selection_strategy:
+          type: string
+          enum: [static, vector_retrieval]
+        kb_collection:
+          type: string
+        policy_profile:
+          type: string
+        cases:
+          type: array
+          description: Optional static cases
+          items:
+            type: object
+            additionalProperties: true
+    EvalSuite:
+      type: object
+      properties:
+        eval_suite_id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        selection_strategy:
+          type: string
+          enum: [static, vector_retrieval]
+        kb_collection:
+          type: string
+        policy_profile:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    EvalRunCreateRequest:
+      type: object
+      required: [eval_suite_id, model_ref]
+      properties:
+        eval_suite_id:
+          type: string
+        model_ref:
+          type: object
+          required: [type, value]
+          properties:
+            type:
+              type: string
+              enum: [base_model, ft_model_version, provider_model_id]
+            value:
+              type: string
+        overrides:
+          type: object
+        cost_cap_usd:
+          type: number
+    EvalRun:
+      type: object
+      properties:
+        eval_run_id:
+          type: string
+          format: uuid
+        eval_suite_id:
+          type: string
+        status:
+          type: string
+          enum: [queued, running, completed, failed, blocked]
+        model_ref_type:
+          type: string
+        model_ref_value:
+          type: string
+        metrics_json:
+          type: object
+          additionalProperties: true
+        trism_report:
+          type: object
+          additionalProperties: true
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        orchestrator_audit_id:
+          type: string
+        governance_decision_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    FtJobCreateRequest:
+      type: object
+      required: [project_id, method, provider, base_model, dataset_id]
+      properties:
+        project_id:
+          type: string
+        method:
+          type: string
+          enum: [SFT, DPO, RFT]
+          enum: [SFT, DPO, RFT]
+        provider:
+          type: string
+          enum: [openai]
+        base_model:
+          type: string
+        dataset_id:
+          type: string
+        hyperparams:
+          type: object
+          additionalProperties: true
+        cost_threshold_usd:
+          type: number
+        prism_pre_approval:
+          type: boolean
+    FtJob:
+      type: object
+      properties:
+        ft_job_id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+        provider:
+          type: string
+        method:
+          type: string
+        base_model:
+          type: string
+        dataset_id:
+          type: string
+        status:
+          type: string
+          enum: [queued, running, completed, failed, blocked, canceled]
+        provider_job_id:
+          type: string
+        result_json:
+          type: object
+          additionalProperties: true
+        cost_estimate_usd:
+          type: number
+        cost_actual_usd:
+          type: number
+        prism_tracked:
+          type: boolean
+        orchestrator_audit_id:
+          type: string
+        governance_decision_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ModelVersionCreateRequest:
+      type: object
+      required: [provider, provider_model_id]
+      properties:
+        provider:
+          type: string
+        provider_model_id:
+          type: string
+        project_id:
+          type: string
+        ft_job_id:
+          type: string
+        eval_summary:
+          type: object
+          additionalProperties: true
+        governance_summary:
+          type: object
+          additionalProperties: true
+    ModelVersion:
+      type: object
+      properties:
+        model_version_id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+        provider:
+          type: string
+        provider_model_id:
+          type: string
+        ft_job_id:
+          type: string
+        status:
+          type: string
+          enum: [candidate, approved, production, retired]
+        eval_summary_json:
+          type: object
+          additionalProperties: true
+        governance_summary_json:
+          type: object
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PromotionCreateRequest:
+      type: object
+      required: [model_version_id, target]
+      properties:
+        model_version_id:
+          type: string
+        target:
+          type: object
+          required: [type, value]
+          properties:
+            type:
+              type: string
+              enum: [assistant, project, global]
+            value:
+              type: string
+        min_eval_score:
+          type: number
+        notes:
+          type: string
+    Promotion:
+      type: object
+      properties:
+        decision_id:
+          type: string
+          format: uuid
+        model_version_id:
+          type: string
+        target_type:
+          type: string
+        target_value:
+          type: string
+        decision:
+          type: string
+          enum: [promoted, rejected, blocked]
+        reasons_json:
+          type: object
+          additionalProperties: true
+        trism_pass:
+          type: boolean
+        prism_pass:
+          type: boolean
+        production_pointer_json:
+          type: object
+          additionalProperties: true
+        orchestrator_audit_id:
+          type: string
+        governance_decision_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    ProductionPointer:
+      type: object
+      properties:
+        pointer_id:
+          type: string
+          format: uuid
+        target_type:
+          type: string
+        target_value:
+          type: string
+        active_model_version_id:
+          type: string
+        previous_model_version_id:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+
+    ReevalCreateRequest:
+      type: object
+      required: [eval_suite_id, model_ref]
+      properties:
+        eval_suite_id:
+          type: string
+        model_ref:
+          type: object
+          required: [type, value]
+          properties:
+            type:
+              type: string
+              enum: [base_model, ft_model_version, provider_model_id]
+            value:
+              type: string
+        schedule:
+          type: string
+          description: Cron or immediate
+    Reeval:
+      type: object
+      properties:
+        reeval_id:
+          type: string
+          format: uuid
+        eval_suite_id:
+          type: string
+        status:
+          type: string
+          enum: [scheduled, running, succeeded, failed]
+        next_run_at:
+          type: string
+          format: date-time
+        last_run_eval_run_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    WebhookDelivery:
+      type: object
+      properties:
+        delivery_id:
+          type: string
+        event:
+          type: string
+        status:
+          type: string
+          enum: [pending, delivered, failed, dead_letter]
+        attempts:
+          type: integer
+        last_attempt_at:
+          type: string
+          format: date-time
+        next_attempt_at:
+          type: string
+          format: date-time
+        endpoint:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        request_id:
+          type: string
